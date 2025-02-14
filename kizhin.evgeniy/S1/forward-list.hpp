@@ -1,7 +1,9 @@
 #ifndef SPBSPU_LABS_2025_AADS_A_KIZHIN_EVGENIY_S1_FORWARD_LIST_HPP
 #define SPBSPU_LABS_2025_AADS_A_KIZHIN_EVGENIY_S1_FORWARD_LIST_HPP
 
+#include <cassert>
 #include <initializer_list>
+#include <memory>
 #include <utility>
 #include "enable-if-input-iterator.hpp"
 #include "forward-list-comparison.hpp"
@@ -24,7 +26,7 @@ namespace kizhin {
     using iterator = detail::ForwardListIterator< value_type, false >;
     using const_iterator = detail::ForwardListIterator< value_type, true >;
 
-    ForwardList() = default;
+    ForwardList();
     ForwardList(const ForwardList&);
     ForwardList(ForwardList&&) noexcept;
     explicit ForwardList(size_type, const_reference = value_type{});
@@ -113,39 +115,44 @@ namespace kizhin {
   private:
     using Node = detail::Node< value_type >;
 
-    Node* end_ = nullptr;
-    size_type size_ = 0;
+    Node* begin_;
+    Node* end_;
   };
 
   template < typename T >
-  ForwardList< T >::ForwardList(const ForwardList& rhs)
+  ForwardList< T >::ForwardList(): begin_(nullptr), end_(nullptr)
+  {
+  }
+
+  template < typename T >
+  ForwardList< T >::ForwardList(const ForwardList& rhs): ForwardList()
   {
     for (const_iterator i = rhs.begin(), end = rhs.end(); i != end; ++i) {
-      emplace_back(*i);
+      push_back(*i);
     }
   }
 
   template < typename T >
   ForwardList< T >::ForwardList(ForwardList&& rhs) noexcept:
-    end_(std::exchange(rhs.end_, nullptr)),
-    size_(std::exchange(rhs.size_, 0))
+    begin_(std::exchange(rhs.begin_, nullptr)),
+    end_(std::exchange(rhs.end_, nullptr))
   {
   }
 
   template < typename T >
-  ForwardList< T >::ForwardList(size_type size, const_reference value)
+  ForwardList< T >::ForwardList(size_type size, const_reference value): ForwardList()
   {
-    for (; size; --size) {
-      emplace_back(value);
+    for (size_type i = 0; i != size; ++i) {
+      push_back(value);
     }
   }
 
   template < typename T >
   template < typename InputIt, detail::enable_if_input_iterator< InputIt > >
-  ForwardList< T >::ForwardList(InputIt first, InputIt last)
+  ForwardList< T >::ForwardList(InputIt first, InputIt last): ForwardList()
   {
     for (; first != last; ++first) {
-      emplace_back(*first);
+      push_back(*first);
     }
   }
 
@@ -167,8 +174,8 @@ namespace kizhin {
   ForwardList< T >& ForwardList< T >::operator=(ForwardList&& rhs) noexcept
   {
     clear();
+    begin_ = std::exchange(rhs.begin_, nullptr);
     end_ = std::exchange(rhs.end_, nullptr);
-    size_ = std::exchange(rhs.size_, 0);
     return *this;
   }
 
@@ -183,61 +190,65 @@ namespace kizhin {
   template < typename T >
   typename ForwardList< T >::iterator ForwardList< T >::begin() noexcept
   {
-    return iterator(end_->next);
+    return iterator(begin_);
   }
 
   template < typename T >
   typename ForwardList< T >::iterator ForwardList< T >::end() noexcept
   {
-    return iterator(end_);
+    return iterator(nullptr);
   }
 
   template < typename T >
   typename ForwardList< T >::const_iterator ForwardList< T >::begin() const noexcept
   {
-    return const_iterator(end_->next);
+    return const_iterator(begin_);
   }
 
   template < typename T >
   typename ForwardList< T >::const_iterator ForwardList< T >::end() const noexcept
   {
-    return const_iterator(end_);
+    return const_iterator(nullptr);
   }
 
   template < typename T >
   typename ForwardList< T >::reference ForwardList< T >::front()
   {
-    return end_->next->data;
+    assert(!empty());
+    return begin_->data;
   }
 
   template < typename T >
   typename ForwardList< T >::reference ForwardList< T >::back()
   {
-    return end_->prev->data;
+    assert(!empty());
+    return end_->data;
   }
 
   template < typename T >
   typename ForwardList< T >::const_reference ForwardList< T >::front() const
   {
-    return end_->next->data;
+    assert(!empty());
+    return begin_->data;
   }
 
   template < typename T >
   typename ForwardList< T >::const_reference ForwardList< T >::back() const
   {
-    return end_->prev->data;
+    assert(!empty());
+    return end_->data;
   }
 
   template < typename T >
   bool ForwardList< T >::empty() const noexcept
   {
-    return size_ == 0;
+    return begin_ == nullptr;
   }
 
   template < typename T >
   typename ForwardList< T >::size_type ForwardList< T >::size() const noexcept
   {
-    return size_;
+    return std::distance(begin(), end());
   }
 
   template < typename T >
@@ -267,48 +278,96 @@ namespace kizhin {
   template < typename T >
   void ForwardList< T >::pop_back() noexcept
   {
-    // TODO: Implement pop
+    assert(!empty());
+    if (begin_ == end_) {
+      delete begin_;
+      begin_ = nullptr;
+      end_ = nullptr;
+    } else {
+      Node* temp = begin_;
+      while (temp->next != end_) {
+        temp = temp->next;
+      }
+      delete temp->next;
+      temp->next = nullptr;
+    }
   }
 
   template < typename T >
   void ForwardList< T >::pop_front() noexcept
   {
-    // TODO: Implement pop
+    assert(!empty());
+    Node* temp = begin_;
+    begin_ = begin_->next;
+    if (begin_ == nullptr) {
+      end_ = nullptr;
+    }
+    delete temp;
   }
 
   template < typename T >
   template < typename... Args >
-  void ForwardList< T >::emplace_back(Args&&...)
+  void ForwardList< T >::emplace_back(Args&&... args)
   {
-    // TODO: Implement emplace
+    std::unique_ptr< Node > newNode = std::make_unique< Node >(
+        Node{ value_type(std::forward< Args >(args)...), nullptr });
+    if (end_ == nullptr) {
+      begin_ = end_ = newNode.release();
+    } else {
+      end_->next = newNode.release();
+      end_ = end_->next;
+    }
   }
 
   template < typename T >
   template < typename... Args >
-  void ForwardList< T >::emplace_front(Args&&...)
+  void ForwardList< T >::emplace_front(Args&&... args)
   {
-    // TODO: Implement emplace
+    begin_ = new Node{ value_type(std::forward< Args >(args)...), begin_ };
+    if (end_ == nullptr) {
+      end_ = begin_;
+    }
   }
 
   template < typename T >
   template < typename... Args >
-  typename ForwardList< T >::iterator ForwardList< T >::emplace(const_iterator, Args&&...)
+  typename ForwardList< T >::iterator ForwardList< T >::emplace(const_iterator position,
+      Args&&... args)
   {
-    // TODO: Implement emplace
-    return iterator(); // stub for tests running
+    if (position == begin()) {
+      emplace_front(std::forward< Args >(args)...);
+      return begin();
+    }
+    if (position == end()) {
+      emplace_back(std::forward< Args >(args)...);
+      return iterator(end_);
+    }
+    Node* prev = begin_;
+    while (prev->next != position.node_) {
+      prev = prev->next;
+    }
+    Node* newNode = new Node{ value_type(std::forward< Args >(args)...), prev->next };
+    prev->next = newNode;
+    return iterator(newNode);
   }
 
   template < typename T >
-  void ForwardList< T >::assign(size_type, const_reference)
+  void ForwardList< T >::assign(size_type size, const_reference value)
   {
-    // TODO: Implement assign
+    clear();
+    for (size_type i = 0; i != size; ++i) {
+      push_back(value);
+    }
   }
 
   template < typename T >
   template < typename InputIt, detail::enable_if_input_iterator< InputIt > >
-  void ForwardList< T >::assign(InputIt, InputIt)
+  void ForwardList< T >::assign(InputIt first, InputIt last)
   {
-    // TODO: Implement assign
+    clear();
+    for (; first != last; ++first) {
+      push_back(*first);
+    }
   }
 
   template < typename T >
@@ -458,13 +517,16 @@ namespace kizhin {
   template < typename T >
   void ForwardList< T >::clear() noexcept
   {
-    // TODO: Implement clear
+    while (!empty()) {
+      pop_front();
+    }
   }
 
   template < typename T >
-  void ForwardList< T >::swap(ForwardList&) noexcept
+  void ForwardList< T >::swap(ForwardList& rhs) noexcept
   {
-    // TODO: Implement swap
+    std::swap(begin_, rhs.begin_);
+    std::swap(end_, rhs.end_);
   }
 }
 
