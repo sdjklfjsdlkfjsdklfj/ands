@@ -117,10 +117,11 @@ namespace kizhin {
 
     Node* begin_;
     Node* end_;
+    size_type size_;
   };
 
   template < typename T >
-  ForwardList< T >::ForwardList(): begin_(nullptr), end_(nullptr)
+  ForwardList< T >::ForwardList(): begin_(nullptr), end_(nullptr), size_(0)
   {
   }
 
@@ -135,7 +136,8 @@ namespace kizhin {
   template < typename T >
   ForwardList< T >::ForwardList(ForwardList&& rhs) noexcept:
     begin_(std::exchange(rhs.begin_, nullptr)),
-    end_(std::exchange(rhs.end_, nullptr))
+    end_(std::exchange(rhs.end_, nullptr)),
+    size_(std::exchange(rhs.size_, 0))
   {
   }
 
@@ -176,6 +178,7 @@ namespace kizhin {
     clear();
     begin_ = std::exchange(rhs.begin_, nullptr);
     end_ = std::exchange(rhs.end_, nullptr);
+    size_ = std::exchange(rhs.size_, 0);
     return *this;
   }
 
@@ -248,7 +251,7 @@ namespace kizhin {
   template < typename T >
   typename ForwardList< T >::size_type ForwardList< T >::size() const noexcept
   {
-    return std::distance(begin(), end());
+    return size_;
   }
 
   template < typename T >
@@ -284,25 +287,27 @@ namespace kizhin {
       begin_ = nullptr;
       end_ = nullptr;
     } else {
-      Node* temp = begin_;
-      while (temp->next != end_) {
-        temp = temp->next;
+      Node* tmp = begin_;
+      while (tmp->next != end_) {
+        tmp = tmp->next;
       }
-      delete temp->next;
-      temp->next = nullptr;
+      delete tmp->next;
+      tmp->next = nullptr;
     }
+    --size_;
   }
 
   template < typename T >
   void ForwardList< T >::pop_front() noexcept
   {
     assert(!empty());
-    Node* temp = begin_;
+    Node* tmp = begin_;
     begin_ = begin_->next;
     if (begin_ == nullptr) {
       end_ = nullptr;
     }
-    delete temp;
+    --size_;
+    delete tmp;
   }
 
   template < typename T >
@@ -317,6 +322,7 @@ namespace kizhin {
       end_->next = newNode.release();
       end_ = end_->next;
     }
+    ++size_;
   }
 
   template < typename T >
@@ -327,6 +333,7 @@ namespace kizhin {
     if (end_ == nullptr) {
       end_ = begin_;
     }
+    ++size_;
   }
 
   template < typename T >
@@ -348,6 +355,7 @@ namespace kizhin {
     }
     Node* newNode = new Node{ value_type(std::forward< Args >(args)...), prev->next };
     prev->next = newNode;
+    ++size_;
     return iterator(newNode);
   }
 
@@ -391,27 +399,39 @@ namespace kizhin {
   }
 
   template < typename T >
-  typename ForwardList< T >::iterator ForwardList< T >::insert(const_iterator, size_type,
-      const_reference)
+  typename ForwardList< T >::iterator ForwardList< T >::insert(const_iterator position,
+      size_type size, const_reference value)
   {
-    // TODO: Implement insert
-    return iterator(); // stub for tests running
+    assert(size != 0);
+    iterator result = emplace(position, value);
+    position = result;
+    for (size_type i = 1; i != size; ++i) {
+      ++position;
+      position = emplace(position, value);
+    }
+    return result;
   }
 
   template < typename T >
   template < typename InputIt, detail::enable_if_input_iterator< InputIt > >
-  typename ForwardList< T >::iterator ForwardList< T >::insert(const_iterator, InputIt,
-      InputIt)
+  typename ForwardList< T >::iterator ForwardList< T >::insert(const_iterator position,
+      InputIt first, InputIt last)
   {
-    // TODO: Implement insert
-    return iterator(); // stub for tests running
+    iterator result = emplace(position, *first);
+    position = result;
+    ++first;
+    for (; first != last; ++first) {
+      ++position;
+      position = emplace(position, *first);
+    }
+    return result;
   }
 
   template < typename T >
   typename ForwardList< T >::iterator ForwardList< T >::insert(const_iterator position,
-      std::initializer_list< value_type > l)
+      std::initializer_list< value_type > init)
   {
-    return insert(position, l.begin(), l.end());
+    return insert(position, init.begin(), init.end());
   }
 
   template < typename T >
@@ -465,7 +485,7 @@ namespace kizhin {
   template < typename T >
   void ForwardList< T >::unique()
   {
-    // TODO: Implement unique
+    return unique(std::equal_to< value_type >{});
   }
 
   template < typename T >
@@ -478,7 +498,7 @@ namespace kizhin {
   template < typename T >
   void ForwardList< T >::sort()
   {
-    // TODO: Implement sort
+    return sort(std::less< value_type >{});
   }
 
   template < typename T >
@@ -525,8 +545,10 @@ namespace kizhin {
   template < typename T >
   void ForwardList< T >::swap(ForwardList& rhs) noexcept
   {
-    std::swap(begin_, rhs.begin_);
-    std::swap(end_, rhs.end_);
+    using std::swap;
+    swap(begin_, rhs.begin_);
+    swap(end_, rhs.end_);
+    swap(size_, rhs.size_);
   }
 }
 
