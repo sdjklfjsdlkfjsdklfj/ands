@@ -79,33 +79,23 @@ namespace kizhin {
     void clear() noexcept;
     void swap(ForwardList&) noexcept;
 
+    void reverse();
+    void spliceAfter(const_iterator, ForwardList&);
+    void spliceAfter(const_iterator, ForwardList&, const_iterator);
+    void spliceAfter(const_iterator, ForwardList&, const_iterator, const_iterator);
+
     void remove(const_reference);
     template < typename UnaryPredicate >
     void removeIf(UnaryPredicate);
-// TODO: Define splice
-#if 0
-    void splice(const_iterator, List&);
-    void splice(const_iterator, List&&);
-    void splice(const_iterator, List&, const_iterator);
-    void splice(const_iterator, List&&, const_iterator);
-    void splice(const_iterator, List&, const_iterator, const_iterator);
-    void splice(const_iterator, List&&, const_iterator, const_iterator);
-#endif
-
-    void reverse() noexcept;
     void unique();
     template < typename BinaryPredicate >
     void unique(BinaryPredicate);
     void sort();
     template < typename Comp >
     void sort(Comp);
-
     void merge(ForwardList&);
-    void merge(ForwardList&&);
     template < typename Comp >
     void merge(ForwardList&, Comp);
-    template < typename Comp >
-    void merge(ForwardList&&, Comp);
 
   private:
     using Node = detail::Node< value_type >;
@@ -139,14 +129,18 @@ namespace kizhin {
   template < typename T >
   ForwardList< T >::ForwardList(size_type size, const_reference value): ForwardList()
   {
-    assign(size, value);
+    for (size_type i = 0; i != size; ++i) {
+      pushBack(value);
+    }
   }
 
   template < typename T >
   template < typename InputIt, detail::enable_if_input_iterator< InputIt > >
   ForwardList< T >::ForwardList(InputIt first, InputIt last): ForwardList()
   {
-    assign(first, last);
+    for (; first != last; ++first) {
+      pushBack(*first);
+    }
   }
 
   template < typename T >
@@ -365,26 +359,23 @@ namespace kizhin {
   template < typename T >
   void ForwardList< T >::assign(size_type size, const_reference value)
   {
-    clear();
-    for (size_type i = 0; i != size; ++i) {
-      pushBack(value);
-    }
+    ForwardList tmp(size, value);
+    swap(tmp);
   }
 
   template < typename T >
   template < typename InputIt, detail::enable_if_input_iterator< InputIt > >
   void ForwardList< T >::assign(InputIt first, InputIt last)
   {
-    clear();
-    for (; first != last; ++first) {
-      pushBack(*first);
-    }
+    ForwardList tmp(first, last);
+    swap(tmp);
   }
 
   template < typename T >
-  void ForwardList< T >::assign(std::initializer_list< value_type > l)
+  void ForwardList< T >::assign(std::initializer_list< value_type > init)
   {
-    assign(l.begin(), l.end());
+    ForwardList tmp(init);
+    swap(tmp);
   }
 
   template < typename T >
@@ -460,13 +451,55 @@ namespace kizhin {
 
   template < typename T >
   template < typename UnaryPredicate >
-  void ForwardList< T >::removeIf(UnaryPredicate)
+  void ForwardList< T >::removeIf(UnaryPredicate p)
   {
-    // TODO: Implement remove
+    for (; begin_ != nullptr && p(begin_->data); --size_) {
+      Node* tmp = begin_;
+      begin_ = begin_->next;
+      delete tmp;
+    }
+    if (begin_ == nullptr) {
+      end_ = nullptr;
+      return;
+    }
+    Node* prev = begin_;
+    Node* curr = begin_->next;
+    while (curr != nullptr) {
+      if (p(curr->data)) {
+        prev->next = curr->next;
+        if (curr == end_) {
+          end_ = prev;
+        }
+        delete curr;
+        --size_;
+      } else {
+        prev = curr;
+      }
+      curr = prev->next;
+    }
   }
 
   template < typename T >
-  void ForwardList< T >::reverse() noexcept
+  void ForwardList< T >::spliceAfter(const_iterator, ForwardList&)
+  {
+    // TODO: Implement splice
+  }
+
+  template < typename T >
+  void ForwardList< T >::spliceAfter(const_iterator, ForwardList&, const_iterator)
+  {
+    // TODO: Implement splice
+  }
+
+  template < typename T >
+  void ForwardList< T >::spliceAfter(const_iterator, ForwardList&, const_iterator,
+      const_iterator)
+  {
+    // TODO: Implement splice
+  }
+
+  template < typename T >
+  void ForwardList< T >::reverse()
   {
     // TODO: Implement reverse
   }
@@ -504,21 +537,8 @@ namespace kizhin {
   }
 
   template < typename T >
-  void ForwardList< T >::merge(ForwardList&&)
-  {
-    // TODO: Implement merge
-  }
-
-  template < typename T >
   template < typename Comp >
   void ForwardList< T >::merge(ForwardList&, Comp)
-  {
-    // TODO: Implement merge
-  }
-
-  template < typename T >
-  template < typename Comp >
-  void ForwardList< T >::merge(ForwardList&&, Comp)
   {
     // TODO: Implement merge
   }
