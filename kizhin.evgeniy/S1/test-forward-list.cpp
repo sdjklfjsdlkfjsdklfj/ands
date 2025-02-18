@@ -17,6 +17,8 @@ void testInvariants(const ListT& list)
   BOOST_TEST(std::addressof(list.back()) == std::addressof(*beforeEnd));
 }
 
+BOOST_AUTO_TEST_SUITE(constructors);
+
 BOOST_AUTO_TEST_CASE(default_constructor)
 {
   const ListT list;
@@ -94,6 +96,9 @@ BOOST_AUTO_TEST_CASE(initializer_list_constructor)
   BOOST_TEST(std::equal(list.begin(), list.end(), init.begin()));
 }
 
+BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE(assignment_operators);
+
 BOOST_AUTO_TEST_CASE(copy_assignment_operator)
 {
   const ListT list{ 1, 2, 3, 4, 5 };
@@ -122,6 +127,9 @@ BOOST_AUTO_TEST_CASE(initializer_list_assignment_operator)
   testInvariants(list);
   BOOST_TEST(list == initied);
 }
+
+BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE(modifiers);
 
 BOOST_AUTO_TEST_CASE(push_back)
 {
@@ -423,6 +431,9 @@ BOOST_AUTO_TEST_CASE(swap)
   BOOST_TEST(second == firstCopy);
 }
 
+BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE(operations);
+
 BOOST_AUTO_TEST_CASE(remove_value)
 {
   // TODO: Implement remove tests
@@ -458,5 +469,9 @@ BOOST_AUTO_TEST_CASE(sort_comparator)
   // TODO: Implement sort tests
 }
 
-// TODO: Add tests: merge, splice, comparison operators
+// TODO: Add tests: merge, splice
+
+BOOST_AUTO_TEST_SUITE_END();
+
+// TODO: Test free comparison operators
 
