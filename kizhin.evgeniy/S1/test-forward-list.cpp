@@ -1,21 +1,6 @@
-#include <initializer_list>
-#include <boost/test/unit_test.hpp>
-#include "forward-list.hpp"
+#include "test-utils.hpp"
 
-using ListT = kizhin::ForwardList< double >;
-
-void testInvariants(const ListT& list)
-{
-  BOOST_TEST(list.empty() == (list.size() == 0));
-  BOOST_TEST(list.empty() == (list.begin() == list.end()));
-  BOOST_TEST(std::distance(list.begin(), list.end()) == list.size());
-  if (list.empty()) {
-    return;
-  }
-  const ListT::const_iterator beforeEnd = std::next(list.begin(), list.size() - 1);
-  BOOST_TEST(std::addressof(list.front()) == std::addressof(*list.begin()));
-  BOOST_TEST(std::addressof(list.back()) == std::addressof(*beforeEnd));
-}
+using kizhin::ListT;
 
 BOOST_AUTO_TEST_SUITE(constructors);
 
