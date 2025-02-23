@@ -21,7 +21,20 @@ namespace kizhin {
   template < typename T >
   bool operator<(const ForwardList< T >& lhs, const ForwardList< T >& rhs)
   {
-    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+    using ConstIter = typename ForwardList< T >::const_iterator;
+    ConstIter first1 = lhs.begin();
+    ConstIter first2 = rhs.begin();
+    ConstIter last1 = lhs.end();
+    ConstIter last2 = rhs.end();
+    for (; (first1 != last1) && (first2 != last2); ++first1, ++first2) {
+      if (*first1 < *first2) {
+        return true;
+      }
+      if (*first2 < *first1) {
+        return false;
+      }
+    }
+    return (first1 == last1) && (first2 != last2);
   }
 
   template < typename T >
