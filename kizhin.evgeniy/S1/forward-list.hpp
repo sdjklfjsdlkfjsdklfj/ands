@@ -508,11 +508,16 @@ namespace kizhin {
     if (first == last || std::addressof(source) == this) {
       return;
     }
-    const_iterator current = first;
-    while (std::next(current) != last) {
-      position = emplaceAfter(position, std::move(current.node_->next->data));
-      current = source.eraseAfter(current);
+    Node* next = position.node_->next;
+    position.node_->next = first.node_->next;
+    size_type distance = std::distance(first, last) - 1;
+    std::next(first, distance).node_->next = next;
+    first.node_->next = last.node_;
+    if (last == source.end()) {
+      source.end_ = first.node_;
     }
+    size_ += distance;
+    source.size_ -= distance;
   }
 
   template < typename T >
@@ -543,6 +548,7 @@ namespace kizhin {
     if (empty()) {
       return;
     }
+    // TODO: REFACTOR: use std algorithms
     Node* curr = beforeBegin_->next;
     while (curr->next) {
       if (p(curr->data, curr->next->data)) {
