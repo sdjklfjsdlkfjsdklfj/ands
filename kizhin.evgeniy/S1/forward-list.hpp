@@ -85,15 +85,18 @@ namespace kizhin {
     void remove(const_reference);
     template < typename UnaryPredicate >
     void removeIf(UnaryPredicate);
+
     void unique();
     template < typename BinaryPredicate >
     void unique(BinaryPredicate);
-    void sort();
-    template < typename Comparator >
-    void sort(Comparator);
+
     void merge(ForwardList&);
     template < typename Comparator >
     void merge(ForwardList&, Comparator);
+
+    void sort();
+    template < typename Comparator >
+    void sort(Comparator);
 
   private:
     using Node = detail::Node< value_type >;
@@ -367,7 +370,7 @@ namespace kizhin {
       --size_;
     }
     first.node_->next = lastPtr;
-    if (lastPtr == nullptr) { // TODO: add test
+    if (lastPtr == nullptr) {
       end_ = first.node_;
     }
     return iterator(first.node_);
@@ -463,27 +466,18 @@ namespace kizhin {
   }
 
   template < typename T >
-  void ForwardList< T >::remove(const_reference value)
+  void ForwardList< T >::reverse()
   {
-    removeIf([&value](const_reference rhs) -> bool {
-      return value == rhs;
-    });
-  }
-
-  template < typename T >
-  template < typename UnaryPredicate >
-  void ForwardList< T >::removeIf(UnaryPredicate p)
-  {
-    const_iterator curr = begin();
-    const_iterator prev = beforeBegin();
-    while (curr != end()) {
-      if (p(*curr)) {
-        curr = eraseAfter(prev);
-      } else {
-        prev = curr;
-        ++curr;
-      }
+    Node* prev = nullptr;
+    Node* curr = beforeBegin_->next;
+    end_ = beforeBegin_->next;
+    while (curr) {
+      Node* next = curr->next;
+      curr->next = prev;
+      prev = curr;
+      curr = next;
     }
+    beforeBegin_->next = prev;
   }
 
   template < typename T >
@@ -521,18 +515,27 @@ namespace kizhin {
   }
 
   template < typename T >
-  void ForwardList< T >::reverse()
+  void ForwardList< T >::remove(const_reference value)
   {
-    Node* prev = nullptr;
-    Node* curr = beforeBegin_->next;
-    end_ = beforeBegin_->next;
-    while (curr) {
-      Node* next = curr->next;
-      curr->next = prev;
-      prev = curr;
-      curr = next;
+    removeIf([&value](const_reference rhs) -> bool {
+      return value == rhs;
+    });
+  }
+
+  template < typename T >
+  template < typename UnaryPredicate >
+  void ForwardList< T >::removeIf(UnaryPredicate p)
+  {
+    const_iterator curr = begin();
+    const_iterator prev = beforeBegin();
+    while (curr != end()) {
+      if (p(*curr)) {
+        curr = eraseAfter(prev);
+      } else {
+        prev = curr;
+        ++curr;
+      }
     }
-    beforeBegin_->next = prev;
   }
 
   template < typename T >
@@ -566,19 +569,6 @@ namespace kizhin {
   }
 
   template < typename T >
-  void ForwardList< T >::sort()
-  {
-    return sort(std::less< value_type >{});
-  }
-
-  template < typename T >
-  template < typename Comp >
-  void ForwardList< T >::sort(Comp)
-  {
-    // TODO: Implement sort
-  }
-
-  template < typename T >
   void ForwardList< T >::merge(ForwardList& source)
   {
     merge(source, std::less< value_type >{});
@@ -597,6 +587,19 @@ namespace kizhin {
     }
 
     // TODO: Implement merge
+  }
+
+  template < typename T >
+  void ForwardList< T >::sort()
+  {
+    return sort(std::less< value_type >{});
+  }
+
+  template < typename T >
+  template < typename Comp >
+  void ForwardList< T >::sort(Comp)
+  {
+    // TODO: Implement sort
   }
 }
 
