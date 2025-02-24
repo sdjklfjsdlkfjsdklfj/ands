@@ -505,7 +505,11 @@ namespace kizhin {
     Node* next = position.node_->next;
     position.node_->next = first.node_->next;
     size_type distance = std::distance(first, last) - 1;
-    std::next(first, distance).node_->next = next;
+    Node* lastInserted = std::next(first, distance).node_;
+    lastInserted->next = next;
+    if (lastInserted->next == nullptr) {
+      end_ = lastInserted;
+    }
     first.node_->next = last.node_;
     if (last == source.end()) {
       source.end_ = first.node_;
@@ -551,21 +555,18 @@ namespace kizhin {
     if (empty()) {
       return;
     }
-    // TODO: REFACTOR: use std algorithms
     Node* curr = beforeBegin_->next;
-    while (curr->next) {
+    while (curr->next != nullptr) {
       if (p(curr->data, curr->next->data)) {
         Node* tmp = curr->next;
         curr->next = tmp->next;
         delete tmp;
         --size_;
-        if (!curr->next) {
-          end_ = curr;
-        }
       } else {
         curr = curr->next;
       }
     }
+    end_ = curr;
   }
 
   template < typename T >
@@ -604,4 +605,3 @@ namespace kizhin {
 }
 
 #endif
-
