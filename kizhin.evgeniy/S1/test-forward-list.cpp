@@ -468,6 +468,20 @@ BOOST_AUTO_TEST_CASE(splice_after_this)
   BOOST_TEST(list == copied);
 }
 
+BOOST_AUTO_TEST_CASE(splice_after_end)
+{
+  const ListT expectedFirst{ 1 };
+  const ListT expectedSecond{ 10, 11, 12, 2, 3, 4, 5 };
+  ListT first = { 1, 2, 3, 4, 5 };
+  ListT second = { 10, 11, 12 };
+  second.spliceAfter(std::next(second.begin(), second.size() - 1), first, first.begin(),
+      first.end());
+  testInvariants(first);
+  testInvariants(second);
+  BOOST_TEST(first == expectedFirst);
+  BOOST_TEST(second == expectedSecond);
+}
+
 BOOST_AUTO_TEST_CASE(splice_after_empty_range)
 {
   ListT list{ 1, 2, 3, 4, 5 };
