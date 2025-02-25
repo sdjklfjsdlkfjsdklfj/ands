@@ -6,7 +6,8 @@
 #include "forward-list-fwd-declaration.hpp"
 
 namespace kizhin {
-  using SequenceT = std::pair< std::string, ForwardList< std::size_t > >;
+  using Numbers = ForwardList< std::size_t >;
+  using SequenceT = std::pair< std::string, Numbers >;
 }
 
 #endif
