@@ -5,6 +5,8 @@
 #include "type_utils.hpp"
 
 namespace kizhin {
+  std::istream& inputNumbersUnlessNewLine(std::istream&,
+      Numbers&); /* TODO: undefined function */
   std::ostream& outputNames(std::ostream&, const ForwardList< SequenceT >&);
   std::ostream& outputSizes(std::ostream&, const ForwardList< SequenceT >&);
 }
@@ -28,7 +30,7 @@ std::ostream& kizhin::processOutput(std::ostream& out,
     const ForwardList< SequenceT >& storage)
 {
   if (storage.empty()) {
-    return out << '0';
+    return out << '0' << '\n';
   }
   outputNames(out, storage) << '\n';
   return outputSizes(out, storage);
@@ -49,28 +51,43 @@ std::ostream& kizhin::outputNames(std::ostream& out,
 std::ostream& kizhin::outputSizes(std::ostream& out,
     const ForwardList< SequenceT >& storage)
 {
-  using ListIter = SequenceT::second_type::const_iterator;
+  // using ListIter = SequenceT::second_type::const_iterator;
+  using ListIter = Numbers::const_iterator;
   ForwardList< std::pair< ListIter, ListIter > > iters;
-  for (const auto& p : storage) {
+  for (const SequenceT& p : storage) {
     iters.emplaceBack(p.second.begin(), p.second.end());
   }
   bool isEqual = false;
   while (!isEqual) {
     isEqual = true;
-    if (iters.front().first != iters.front().second) {
-      out << *(iters.front().first++);
-      isEqual = false;
-    }
+    bool isFirst = true;
     using iterator = ForwardList< std::pair< ListIter, ListIter > >::iterator;
-    for (iterator i = ++iters.begin(), end = iters.end(); i != end; ++i) {
+    for (iterator i = iters.begin(), end = iters.end(); i != end; ++i) {
       iterator::reference p = *i;
       if (p.first != p.second) {
-        out << ' ' << *(p.first++);
+        if (!isFirst) {
+          out << ' ';
+        }
+        out << *(p.first++);
         isEqual = false;
+        isFirst = false;
       }
     }
-    std::cout << '\n'; /* TODO: extra new line character */
+    if (!isEqual) {
+      std::cout << '\n';
+    }
   }
   return out;
+}
+
+/* TODO implement inputNumbersUnlessNewLine */
+std::istream& kizhin::inputNumbersUnlessNewLine(std::istream& in, Numbers& /*storage*/)
+{
+  // Numbers::value_type current = {};
+  // std::string currentStr;
+  /* TODO: dont ignore spaces */
+  // while (in >> currentStr) {
+  // }
+  return in;
 }
 
