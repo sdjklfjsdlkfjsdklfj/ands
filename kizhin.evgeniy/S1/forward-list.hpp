@@ -303,7 +303,7 @@ namespace kizhin {
   typename ForwardList< T >::iterator ForwardList< T >::emplaceAfter(
       const_iterator position, Args&&... args)
   {
-    assert(position != end()); /* TODO: clarify */
+    assert(position != end());
     if (position == beforeBegin()) {
       emplaceFront(std::forward< Args >(args)...);
       return iterator(beforeBegin_->next);
@@ -521,6 +521,7 @@ namespace kizhin {
   template < typename T >
   void ForwardList< T >::remove(const_reference value)
   {
+    /* TODO: CG: lambda format */
     removeIf([&value](const_reference rhs) -> bool {
       return value == rhs;
     });
@@ -577,8 +578,9 @@ namespace kizhin {
 
   template < typename T >
   template < typename Comp >
-  void ForwardList< T >::merge(ForwardList& source, Comp)
+  void ForwardList< T >::merge(ForwardList& source, Comp comp)
   {
+    /* TODO: Refactor merge */
     if (this == std::addressof(source) || source.empty()) {
       return;
     }
@@ -586,8 +588,22 @@ namespace kizhin {
       swap(source);
       return;
     }
-
-    // TODO: Implement merge
+    ForwardList result;
+    iterator thisCurr = begin();
+    iterator sourceCurr = source.begin();
+    while (thisCurr != end() && sourceCurr != source.end()) {
+      if (comp(*thisCurr, *sourceCurr)) {
+        result.emplaceBack(*thisCurr);
+        ++thisCurr;
+      } else {
+        result.emplaceBack(*sourceCurr);
+        ++sourceCurr;
+      }
+    }
+    result.insertAfter(const_iterator(result.end_), thisCurr, end());
+    result.insertAfter(const_iterator(result.end_), sourceCurr, source.end());
+    source.clear();
+    swap(result);
   }
 
   template < typename T >
@@ -605,3 +621,4 @@ namespace kizhin {
 }
 
 #endif
+
