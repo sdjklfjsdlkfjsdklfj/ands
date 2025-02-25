@@ -578,17 +578,89 @@ BOOST_AUTO_TEST_CASE(unique_predicate)
   BOOST_TEST(list == expected);
 }
 
+BOOST_AUTO_TEST_CASE(merge_empty_source)
+{
+  ListT list{ 1, 2, 3, 4, 5 };
+  const ListT copied(list);
+  ListT source;
+  list.merge(source);
+  testInvariants(list);
+  testInvariants(source);
+  BOOST_TEST(list == copied);
+  BOOST_TEST(source.empty());
+}
+
+BOOST_AUTO_TEST_CASE(merge_this_source)
+{
+  ListT list{ 1, 2, 3, 4, 5 };
+  const ListT copied(list);
+  list.merge(list);
+  testInvariants(list);
+  BOOST_TEST(list == copied);
+}
+
+BOOST_AUTO_TEST_CASE(merge_in_empty)
+{
+  ListT list;
+  ListT source{ 1, 2, 3, 4, 5 };
+  const ListT expected(source);
+  list.merge(source);
+  testInvariants(list);
+  testInvariants(source);
+  BOOST_TEST(list == expected);
+  BOOST_TEST(source.empty());
+}
+
+BOOST_AUTO_TEST_CASE(merge)
+{
+  ListT list{ 1, 3, 5, 7 };
+  ListT source{ 2, 4, 6, 8 };
+  const ListT expected{ 1, 2, 3, 4, 5, 6, 7, 8 };
+  list.merge(source);
+  testInvariants(list);
+  testInvariants(source);
+  BOOST_TEST(list == expected);
+  BOOST_TEST(source.empty());
+}
+
+BOOST_AUTO_TEST_CASE(merge_comparator)
+{
+  ListT list{ 1, 3, 5, 7 };
+  ListT source{ 2, 4, 6, 8 };
+  const ListT expected{ 1, 2, 3, 4, 5, 6, 7, 8 };
+  list.merge(source, std::less< ListT::value_type >{});
+  testInvariants(list);
+  testInvariants(source);
+  BOOST_TEST(list == expected);
+  BOOST_TEST(source.empty());
+}
+
+BOOST_AUTO_TEST_CASE(sort_single_elem)
+{
+  ListT list{ 3 };
+  list.sort();
+  testInvariants(list);
+  BOOST_TEST(list.front() == 3);
+  BOOST_TEST(list.size() == 1);
+}
+
 BOOST_AUTO_TEST_CASE(sort)
 {
-  // TODO: Implement sort tests
+  ListT list{ 3, 5, 7, 6, 8, 2, 1, 4 };
+  const ListT expected{ 1, 2, 3, 4, 5, 6, 7, 8 };
+  list.sort();
+  testInvariants(list);
+  BOOST_TEST(list == expected);
 }
 
 BOOST_AUTO_TEST_CASE(sort_comparator)
 {
-  // TODO: Implement sort tests
+  ListT list{ 3, 5, 7, 6, 8, 2, 1, 4 };
+  const ListT expected{ 1, 2, 3, 4, 5, 6, 7, 8 };
+  list.sort(std::less< ListT::value_type >{});
+  testInvariants(list);
+  BOOST_TEST(list == expected);
 }
-
-// TODO: Add tests: merge
 
 BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE(comparison_operators);
@@ -644,4 +716,3 @@ BOOST_AUTO_TEST_CASE(less_operator_different_values)
 }
 
 BOOST_AUTO_TEST_SUITE_END();
-
