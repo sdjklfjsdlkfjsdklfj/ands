@@ -577,10 +577,9 @@ namespace kizhin {
   }
 
   template < typename T >
-  template < typename Comp >
-  void ForwardList< T >::merge(ForwardList& source, Comp comp)
+  template < typename Comparator >
+  void ForwardList< T >::merge(ForwardList& source, Comparator comp)
   {
-    /* TODO: Refactor merge */
     if (this == std::addressof(source) || source.empty()) {
       return;
     }
@@ -588,9 +587,9 @@ namespace kizhin {
       swap(source);
       return;
     }
-    ForwardList result;
     iterator thisCurr = begin();
     iterator sourceCurr = source.begin();
+    ForwardList result;
     while (thisCurr != end() && sourceCurr != source.end()) {
       if (comp(*thisCurr, *sourceCurr)) {
         result.emplaceBack(*thisCurr);
@@ -613,12 +612,23 @@ namespace kizhin {
   }
 
   template < typename T >
-  template < typename Comp >
-  void ForwardList< T >::sort(Comp)
+  template < typename Comparator >
+  void ForwardList< T >::sort(Comparator comp)
   {
-    // TODO: Implement sort
+    if (size_ <= 1) {
+      return;
+    }
+    const iterator mid = std::next(begin(), size_ / 2);
+    ForwardList< T > left;
+    ForwardList< T > right;
+    left.spliceAfter(left.beforeBegin(), *this, beforeBegin(), mid);
+    right.spliceAfter(right.beforeBegin(), *this, beforeBegin(), end());
+
+    left.sort(comp);
+    right.sort(comp);
+    merge(left, comp);
+    merge(right, comp);
   }
 }
 
 #endif
-
