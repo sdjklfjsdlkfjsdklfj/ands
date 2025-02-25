@@ -7,9 +7,8 @@
 #include "forward-list-fwd-declaration.hpp"
 
 namespace kizhin {
-  using Numbers = ForwardList< std::int64_t >;
+  using Numbers = ForwardList< std::int32_t >;
   using SequenceT = std::pair< std::string, Numbers >;
 }
 
 #endif
-
