@@ -6,8 +6,8 @@ int main()
 {
   kizhin::ForwardList< kizhin::SequenceT > sequences;
   if (!kizhin::inputSequences(std::cin, sequences)) {
-    std::cout << "Not input" << '\n';
+    /* TODO: clarify what to do here */
   }
-  kizhin::processOutput(std::cout, sequences) << '\n';
+  kizhin::processOutput(std::cout, sequences);
 }
 
