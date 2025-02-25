@@ -5,8 +5,6 @@
 #include "type_utils.hpp"
 
 namespace kizhin {
-  std::istream& inputNumbersUnlessNewLine(std::istream&,
-      Numbers&); /* TODO: undefined function */
   std::ostream& outputNames(std::ostream&, const ForwardList< SequenceT >&);
   std::ostream& outputSizes(std::ostream&, const ForwardList< SequenceT >&);
 }
@@ -22,6 +20,10 @@ std::istream& kizhin::inputSequences(std::istream& in, ForwardList< SequenceT >&
       in.clear();
     }
     storage.pushBack(std::move(curr));
+    if (in.eof()) {
+      in.clear();
+      return in;
+    }
   }
   return in;
 }
@@ -54,8 +56,16 @@ std::ostream& kizhin::outputSizes(std::ostream& out,
   // using ListIter = SequenceT::second_type::const_iterator;
   using ListIter = Numbers::const_iterator;
   ForwardList< std::pair< ListIter, ListIter > > iters;
-  for (const SequenceT& p : storage) {
-    iters.emplaceBack(p.second.begin(), p.second.end());
+  bool allEmpty = true;
+  for (const SequenceT& seq : storage) {
+    iters.emplaceBack(seq.second.begin(), seq.second.end());
+    if (seq.second.begin() != seq.second.end()) {
+      allEmpty = false;
+    }
+  }
+  if (allEmpty) {
+    out << "0\n";
+    return out;
   }
   bool isEqual = false;
   while (!isEqual) {
@@ -78,16 +88,5 @@ std::ostream& kizhin::outputSizes(std::ostream& out,
     }
   }
   return out;
-}
-
-/* TODO implement inputNumbersUnlessNewLine */
-std::istream& kizhin::inputNumbersUnlessNewLine(std::istream& in, Numbers& /*storage*/)
-{
-  // Numbers::value_type current = {};
-  // std::string currentStr;
-  /* TODO: dont ignore spaces */
-  // while (in >> currentStr) {
-  // }
-  return in;
 }
 
