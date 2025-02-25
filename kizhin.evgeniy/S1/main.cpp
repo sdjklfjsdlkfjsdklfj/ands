@@ -11,4 +11,3 @@ int main()
   }
   kizhin::processOutput(std::cout, sequences);
 }
-
