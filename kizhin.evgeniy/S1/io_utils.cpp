@@ -14,10 +14,9 @@ std::istream& kizhin::inputSequences(std::istream& in, ForwardList< SequenceT >&
   using IstremIterT = std::istream_iterator< SequenceT::second_type::value_type >;
   while (in) {
     SequenceT curr;
-    in >> curr.first;
     curr.second.assign(IstremIterT(in), IstremIterT{});
-    if (!in.eof()) {
-      in.clear();
+    if (!in.good()) {
+      return in;
     }
     storage.pushBack(std::move(curr));
     if (in.eof()) {
@@ -89,4 +88,3 @@ std::ostream& kizhin::outputSizes(std::ostream& out,
   }
   return out;
 }
-
