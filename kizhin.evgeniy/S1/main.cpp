@@ -6,7 +6,8 @@ int main()
 {
   kizhin::ForwardList< kizhin::SequenceT > sequences;
   if (!kizhin::inputSequences(std::cin, sequences)) {
-    /* TODO: clarify what to do here */
+    std::cerr << "Error: overflow or invalid input\n";
+    return 1;
   }
   kizhin::processOutput(std::cout, sequences);
 }
